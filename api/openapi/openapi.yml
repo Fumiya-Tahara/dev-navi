@@ -1,0 +1,126 @@
+openapi: 3.0.0
+
+info:
+  title: "dev navi API"
+  version: "1.0.0"
+
+paths:
+  /login:
+    get:
+      summary: "Login"
+      description: "Login to the dev navi with LINE account"
+      operationId: "login"
+      responses:
+        "303":
+          description: "Redirect to the app page"
+  /logout:
+    get:
+      summary: "Logout"
+      description: "Logout from the dev navi"
+      operationId: "logout"
+      responses:
+        "303":
+          description: "Redirect to the login page"
+  /products:
+    get:
+      summary: "Get products"
+      description: "Get users' products list"
+      operationId: "getProducts"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Product"
+  /create-product:
+    post:
+      summary: "Create product"
+      description: "Create a new product"
+      operationId: "createProduct"
+      responses:
+        "201":
+          description: "Created"
+  /products/{product-id}:
+    get:
+      summary: "Get product"
+      description: "Get a product"
+      operationId: "getProduct"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetails"
+    post:
+      summary: "Update product"
+      description: "Update a product"
+      operationId: "updateProduct"
+      responses:
+        "200":
+          description: "OK"
+    delete:
+      summary: "Delete product"
+      description: "Delete a product"
+      operationId: "deleteProduct"
+      responses:
+        "200":
+          description: "OK"
+
+components:
+  schemas:
+    Product:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        title:
+          type: "string"
+        deadline:
+          type: "string"
+        memo:
+          type: "string"
+      required:
+        - id
+        - title
+        - deadline
+        - memo
+
+    ProductDetails:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        title:
+          type: "string"
+        deadline:
+          type: "string"
+        memo:
+          type: "string"
+        milestones:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Milestone"
+      required:
+        - id
+        - title
+        - deadline
+        - memo
+        - milestones
+
+    Milestone:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        title:
+          type: "string"
+        deadline:
+          type: "string"
+      required:
+        - id
+        - title
+        - deadline

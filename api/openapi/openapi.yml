@@ -44,6 +44,8 @@ paths:
         "201":
           description: "Created"
   /products/{product-id}:
+    parameters:
+      - $ref: "#/components/parameters/ProductId"
     get:
       summary: "Get product"
       description: "Get a product"
@@ -124,3 +126,11 @@ components:
         - id
         - title
         - deadline
+
+  parameters:
+    ProductId:
+      name: "product-id"
+      in: "path"
+      required: true
+      schema:
+        type: "integer"

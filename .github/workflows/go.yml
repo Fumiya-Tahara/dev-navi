@@ -13,15 +13,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: "1.22"
+          cache: "false"
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.54
+          args: ./.../api
 
       - name: Build
-        run: go build -v ./api/...
+        run: go build -v ./api
 
       - name: Test
-        run: go test -v ./api/...
+        run: go test -v ./api

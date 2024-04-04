@@ -34,12 +34,18 @@ paths:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/components/schemas/Product"
+                  $ref: "#/components/schemas/ProductResponse"
   /create-product:
     post:
       summary: "Create product"
       description: "Create a new product"
       operationId: "createProduct"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductRequest"
       responses:
         "201":
           description: "Created"
@@ -56,11 +62,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProductDetails"
+                $ref: "#/components/schemas/ProductDetailsResponse"
     post:
       summary: "Update product"
       description: "Update a product"
       operationId: "updateProduct"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductRequest"
       responses:
         "200":
           description: "OK"
@@ -72,9 +84,52 @@ paths:
         "200":
           description: "OK"
 
+  /products/{product-id}/milestones/{milestone-id}:
+    parameters:
+      - $ref: "#/components/parameters/ProductId"
+      - $ref: "#/components/parameters/MilestoneId"
+    post:
+      summary: "Create milestone"
+      description: "Create a new milestone"
+      operationId: "createMilestone"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MilestoneRequest"
+      responses:
+        "201":
+          description: "Created"
+
 components:
   schemas:
-    Product:
+    ProductRequest:
+      type: "object"
+      properties:
+        title:
+          type: "string"
+        deadline:
+          type: "string"
+        memo:
+          type: "string"
+      required:
+        - title
+        - deadline
+        - memo
+
+    MilestoneRequest:
+      type: "object"
+      properties:
+        title:
+          type: "string"
+        deadline:
+          type: "string"
+      required:
+        - title
+        - deadline
+
+    ProductResponse:
       type: "object"
       properties:
         id:
@@ -91,7 +146,7 @@ components:
         - deadline
         - memo
 
-    ProductDetails:
+    ProductDetailsResponse:
       type: "object"
       properties:
         id:
@@ -105,7 +160,7 @@ components:
         milestones:
           type: "array"
           items:
-            $ref: "#/components/schemas/Milestone"
+            $ref: "#/components/schemas/MilestoneResponse"
       required:
         - id
         - title
@@ -113,7 +168,7 @@ components:
         - memo
         - milestones
 
-    Milestone:
+    MilestoneResponse:
       type: "object"
       properties:
         id:
@@ -130,6 +185,12 @@ components:
   parameters:
     ProductId:
       name: "product-id"
+      in: "path"
+      required: true
+      schema:
+        type: "integer"
+    MilestoneId:
+      name: "milestone-id"
       in: "path"
       required: true
       schema:

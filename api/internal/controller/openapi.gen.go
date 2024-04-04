@@ -21,32 +21,57 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
-// Milestone defines model for Milestone.
-type Milestone struct {
+// MilestoneRequest defines model for MilestoneRequest.
+type MilestoneRequest struct {
+	Deadline string `json:"deadline"`
+	Title    string `json:"title"`
+}
+
+// MilestoneResponse defines model for MilestoneResponse.
+type MilestoneResponse struct {
 	Deadline string `json:"deadline"`
 	Id       int    `json:"id"`
 	Title    string `json:"title"`
 }
 
-// Product defines model for Product.
-type Product struct {
+// ProductDetailsResponse defines model for ProductDetailsResponse.
+type ProductDetailsResponse struct {
+	Deadline   string              `json:"deadline"`
+	Id         int                 `json:"id"`
+	Memo       string              `json:"memo"`
+	Milestones []MilestoneResponse `json:"milestones"`
+	Title      string              `json:"title"`
+}
+
+// ProductRequest defines model for ProductRequest.
+type ProductRequest struct {
+	Deadline string `json:"deadline"`
+	Memo     string `json:"memo"`
+	Title    string `json:"title"`
+}
+
+// ProductResponse defines model for ProductResponse.
+type ProductResponse struct {
 	Deadline string `json:"deadline"`
 	Id       int    `json:"id"`
 	Memo     string `json:"memo"`
 	Title    string `json:"title"`
 }
 
-// ProductDetails defines model for ProductDetails.
-type ProductDetails struct {
-	Deadline   string      `json:"deadline"`
-	Id         int         `json:"id"`
-	Memo       string      `json:"memo"`
-	Milestones []Milestone `json:"milestones"`
-	Title      string      `json:"title"`
-}
+// MilestoneId defines model for MilestoneId.
+type MilestoneId = int
 
 // ProductId defines model for ProductId.
 type ProductId = int
+
+// CreateProductJSONRequestBody defines body for CreateProduct for application/json ContentType.
+type CreateProductJSONRequestBody = ProductRequest
+
+// UpdateProductJSONRequestBody defines body for UpdateProduct for application/json ContentType.
+type UpdateProductJSONRequestBody = ProductRequest
+
+// CreateMilestoneJSONRequestBody defines body for CreateMilestone for application/json ContentType.
+type CreateMilestoneJSONRequestBody = MilestoneRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -121,8 +146,10 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// CreateProduct request
-	CreateProduct(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// CreateProductWithBody request with any body
+	CreateProductWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateProduct(ctx context.Context, body CreateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// Login request
 	Login(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -139,12 +166,31 @@ type ClientInterface interface {
 	// GetProduct request
 	GetProduct(ctx context.Context, productId ProductId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// UpdateProduct request
-	UpdateProduct(ctx context.Context, productId ProductId, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// UpdateProductWithBody request with any body
+	UpdateProductWithBody(ctx context.Context, productId ProductId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateProduct(ctx context.Context, productId ProductId, body UpdateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateMilestoneWithBody request with any body
+	CreateMilestoneWithBody(ctx context.Context, productId ProductId, milestoneId MilestoneId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateMilestone(ctx context.Context, productId ProductId, milestoneId MilestoneId, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) CreateProduct(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateProductRequest(c.Server)
+func (c *Client) CreateProductWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProductRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateProduct(ctx context.Context, body CreateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProductRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -215,8 +261,8 @@ func (c *Client) GetProduct(ctx context.Context, productId ProductId, reqEditors
 	return c.Client.Do(req)
 }
 
-func (c *Client) UpdateProduct(ctx context.Context, productId ProductId, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewUpdateProductRequest(c.Server, productId)
+func (c *Client) UpdateProductWithBody(ctx context.Context, productId ProductId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProductRequestWithBody(c.Server, productId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -227,8 +273,55 @@ func (c *Client) UpdateProduct(ctx context.Context, productId ProductId, reqEdit
 	return c.Client.Do(req)
 }
 
-// NewCreateProductRequest generates requests for CreateProduct
-func NewCreateProductRequest(server string) (*http.Request, error) {
+func (c *Client) UpdateProduct(ctx context.Context, productId ProductId, body UpdateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProductRequest(c.Server, productId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateMilestoneWithBody(ctx context.Context, productId ProductId, milestoneId MilestoneId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMilestoneRequestWithBody(c.Server, productId, milestoneId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateMilestone(ctx context.Context, productId ProductId, milestoneId MilestoneId, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMilestoneRequest(c.Server, productId, milestoneId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewCreateProductRequest calls the generic CreateProduct builder with application/json body
+func NewCreateProductRequest(server string, body CreateProductJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateProductRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateProductRequestWithBody generates requests for CreateProduct with any type of body
+func NewCreateProductRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -246,10 +339,12 @@ func NewCreateProductRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -403,8 +498,19 @@ func NewGetProductRequest(server string, productId ProductId) (*http.Request, er
 	return req, nil
 }
 
-// NewUpdateProductRequest generates requests for UpdateProduct
-func NewUpdateProductRequest(server string, productId ProductId) (*http.Request, error) {
+// NewUpdateProductRequest calls the generic UpdateProduct builder with application/json body
+func NewUpdateProductRequest(server string, productId ProductId, body UpdateProductJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateProductRequestWithBody(server, productId, "application/json", bodyReader)
+}
+
+// NewUpdateProductRequestWithBody generates requests for UpdateProduct with any type of body
+func NewUpdateProductRequestWithBody(server string, productId ProductId, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -429,10 +535,66 @@ func NewUpdateProductRequest(server string, productId ProductId) (*http.Request,
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreateMilestoneRequest calls the generic CreateMilestone builder with application/json body
+func NewCreateMilestoneRequest(server string, productId ProductId, milestoneId MilestoneId, body CreateMilestoneJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateMilestoneRequestWithBody(server, productId, milestoneId, "application/json", bodyReader)
+}
+
+// NewCreateMilestoneRequestWithBody generates requests for CreateMilestone with any type of body
+func NewCreateMilestoneRequestWithBody(server string, productId ProductId, milestoneId MilestoneId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "product-id", runtime.ParamLocationPath, productId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "milestone-id", runtime.ParamLocationPath, milestoneId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/products/%s/milestones/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -480,8 +642,10 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// CreateProductWithResponse request
-	CreateProductWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateProductResponse, error)
+	// CreateProductWithBodyWithResponse request with any body
+	CreateProductWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProductResponse, error)
+
+	CreateProductWithResponse(ctx context.Context, body CreateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProductResponse, error)
 
 	// LoginWithResponse request
 	LoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*LoginResponse, error)
@@ -498,8 +662,15 @@ type ClientWithResponsesInterface interface {
 	// GetProductWithResponse request
 	GetProductWithResponse(ctx context.Context, productId ProductId, reqEditors ...RequestEditorFn) (*GetProductResponse, error)
 
-	// UpdateProductWithResponse request
-	UpdateProductWithResponse(ctx context.Context, productId ProductId, reqEditors ...RequestEditorFn) (*UpdateProductResponse, error)
+	// UpdateProductWithBodyWithResponse request with any body
+	UpdateProductWithBodyWithResponse(ctx context.Context, productId ProductId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProductResponse, error)
+
+	UpdateProductWithResponse(ctx context.Context, productId ProductId, body UpdateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProductResponse, error)
+
+	// CreateMilestoneWithBodyWithResponse request with any body
+	CreateMilestoneWithBodyWithResponse(ctx context.Context, productId ProductId, milestoneId MilestoneId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error)
+
+	CreateMilestoneWithResponse(ctx context.Context, productId ProductId, milestoneId MilestoneId, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error)
 }
 
 type CreateProductResponse struct {
@@ -568,7 +739,7 @@ func (r LogoutResponse) StatusCode() int {
 type GetProductsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]Product
+	JSON200      *[]ProductResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -611,7 +782,7 @@ func (r DeleteProductResponse) StatusCode() int {
 type GetProductResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ProductDetails
+	JSON200      *ProductDetailsResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -651,9 +822,38 @@ func (r UpdateProductResponse) StatusCode() int {
 	return 0
 }
 
-// CreateProductWithResponse request returning *CreateProductResponse
-func (c *ClientWithResponses) CreateProductWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateProductResponse, error) {
-	rsp, err := c.CreateProduct(ctx, reqEditors...)
+type CreateMilestoneResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateMilestoneResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateMilestoneResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// CreateProductWithBodyWithResponse request with arbitrary body returning *CreateProductResponse
+func (c *ClientWithResponses) CreateProductWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProductResponse, error) {
+	rsp, err := c.CreateProductWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateProductResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateProductWithResponse(ctx context.Context, body CreateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProductResponse, error) {
+	rsp, err := c.CreateProduct(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -705,13 +905,38 @@ func (c *ClientWithResponses) GetProductWithResponse(ctx context.Context, produc
 	return ParseGetProductResponse(rsp)
 }
 
-// UpdateProductWithResponse request returning *UpdateProductResponse
-func (c *ClientWithResponses) UpdateProductWithResponse(ctx context.Context, productId ProductId, reqEditors ...RequestEditorFn) (*UpdateProductResponse, error) {
-	rsp, err := c.UpdateProduct(ctx, productId, reqEditors...)
+// UpdateProductWithBodyWithResponse request with arbitrary body returning *UpdateProductResponse
+func (c *ClientWithResponses) UpdateProductWithBodyWithResponse(ctx context.Context, productId ProductId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProductResponse, error) {
+	rsp, err := c.UpdateProductWithBody(ctx, productId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseUpdateProductResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateProductWithResponse(ctx context.Context, productId ProductId, body UpdateProductJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProductResponse, error) {
+	rsp, err := c.UpdateProduct(ctx, productId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProductResponse(rsp)
+}
+
+// CreateMilestoneWithBodyWithResponse request with arbitrary body returning *CreateMilestoneResponse
+func (c *ClientWithResponses) CreateMilestoneWithBodyWithResponse(ctx context.Context, productId ProductId, milestoneId MilestoneId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error) {
+	rsp, err := c.CreateMilestoneWithBody(ctx, productId, milestoneId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMilestoneResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateMilestoneWithResponse(ctx context.Context, productId ProductId, milestoneId MilestoneId, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error) {
+	rsp, err := c.CreateMilestone(ctx, productId, milestoneId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMilestoneResponse(rsp)
 }
 
 // ParseCreateProductResponse parses an HTTP response from a CreateProductWithResponse call
@@ -777,7 +1002,7 @@ func ParseGetProductsResponse(rsp *http.Response) (*GetProductsResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []Product
+		var dest []ProductResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -819,7 +1044,7 @@ func ParseGetProductResponse(rsp *http.Response) (*GetProductResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ProductDetails
+		var dest ProductDetailsResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -839,6 +1064,22 @@ func ParseUpdateProductResponse(rsp *http.Response) (*UpdateProductResponse, err
 	}
 
 	response := &UpdateProductResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseCreateMilestoneResponse parses an HTTP response from a CreateMilestoneWithResponse call
+func ParseCreateMilestoneResponse(rsp *http.Response) (*CreateMilestoneResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateMilestoneResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -869,6 +1110,9 @@ type ServerInterface interface {
 	// Update product
 	// (POST /products/{product-id})
 	UpdateProduct(ctx echo.Context, productId ProductId) error
+	// Create milestone
+	// (POST /products/{product-id}/milestones/{milestone-id})
+	CreateMilestone(ctx echo.Context, productId ProductId, milestoneId MilestoneId) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -960,6 +1204,30 @@ func (w *ServerInterfaceWrapper) UpdateProduct(ctx echo.Context) error {
 	return err
 }
 
+// CreateMilestone converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateMilestone(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "product-id" -------------
+	var productId ProductId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "product-id", ctx.Param("product-id"), &productId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter product-id: %s", err))
+	}
+
+	// ------------- Path parameter "milestone-id" -------------
+	var milestoneId MilestoneId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "milestone-id", ctx.Param("milestone-id"), &milestoneId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter milestone-id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateMilestone(ctx, productId, milestoneId)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -995,23 +1263,26 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/products/:product-id", wrapper.DeleteProduct)
 	router.GET(baseURL+"/products/:product-id", wrapper.GetProduct)
 	router.POST(baseURL+"/products/:product-id", wrapper.UpdateProduct)
+	router.POST(baseURL+"/products/:product-id/milestones/:milestone-id", wrapper.CreateMilestone)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7RVQW/bPAz9KwK/D9jFrd31ltuwDkWwbgsG7FT0oNlMosKWNIpOEQT+74MkO05iO+iW",
-	"7pTYJB8f3xPlHeSmskajZgezHVhJskJGCk8LMkWd87zwD0rDDKzkNSSgZYX+KcavVAEJEP6qFWEBM6Ya",
-	"E3D5GivpK3lrfbbSjCskaJqmi4YuX1SJjo3GQICMRWKFIVSgLEoVIy2KY1J6BU0CqhgDT4AVl2MVzSHH",
-	"RwikY27SN3pKujLz8xlz9oCtDG9Er8LKjBZcxLvFPUP/Dlmq0v3rKarOzYCtGKvw53/CJczgv7Q/b2l7",
-	"BtL+ADR7+pJIbt9KlSNWQ4k8ltLLOE9sBwVuhJYbJT4s5pDABskp4zfg5jq7zjwxY1FLq2AGt+FVEpYj",
-	"DJvmhJLxyh4cHOM4iu1yUpYj2MeQJ6TQ+CK67ABN0qf4zWuTFvsoobNGuyjw++xmCrYIIrm6qiRt+2Zd",
-	"Gx9MS7Pye72DFY7Qe/BRwUbwGsVekRfFa/Ew//pJyDw3tR4yDnWnTG+z22GH71gowpy7JtJaYeUKT6hH",
-	"wI6xqfkcZVOzWJKpjliPcfQ4f0MyiDZB02MGnq3MbpLpPbKoHZJ711niRKncUM175EUHNnA/8z+50Yw6",
-	"9JDWlioPxemzM8Hb/iZ+1Tp2J22wjH6u4xm+fT5RwA+1n/xIh3TXfy2aqEaJjENd7sJ7ISf3ISZM7kM2",
-	"hBzQbHvYftJJi6Z59L5cassr3Ohu7z80wY92+E1/HG/Wp6T9N795SiaurR+2kGctigkXWdT26G+rpvkd",
-	"AAD//9hqENatCAAA",
+	"H4sIAAAAAAAC/8xWW0/bMBT+K5Y3aS+BlPGWt21MCA22CmlPiAcvPrRGiW3sE1BV+b9Pdu630nKZ9tbG",
+	"x5+/y8mJtzRVuVYSJFqabKlmhuWAYMK/K5GBRSXhgvu/QtKEaoZrGlHJcqAJzeuKI8FpRA08FMIApwma",
+	"AiJq0zXkzO/Fjfb1QiKswFDnIro0ihcpzmLrcv1gZFev9jVcw0MBFoNKozQYFBAqODCeCQkdMItGyBV1",
+	"EUWB2dSK61K6qcqiFus2qneoP/eQosfqULFaSQsHchF8Su/eHIOPexGtkjkDZCKzb8w2h1xNbmh6KWAL",
+	"hDz8+Gjgjib0Q9x2alzlG48ddY0cZgzbvNqeim+P3Q7LXtZks5a8tPsqyJ1E/02ob2H+WIbfLuRdeWR5",
+	"AuXwSCR7FOTL8oJG9BGMFcpPlZPjxfHCc1EaJNOCJvQ0PIrCwAmi49QAQziqZk5wRZU5crCpERpLsG+h",
+	"jjAi4YnU1QHaMF/ip1lVtGxWTdkVXxXfeMRUSQQZwJnWmUjDzvje+hO2ndG2q/UHDef6jvohGR6UKQeN",
+	"nxcnc3p4CMQWec7MplVZ6/OLcaZWIvBbwYQvl36VoCK4BtJE8SRwTS4vfn4nLE1VIcdWhX10wPR0cTo+",
+	"4Rq4MJBifQjTmmi2ggH1ErBmrArcRVkVSO6Mynuspzh6nJeQDKbN0PSYgWdls51leg5ICgvGfqojsSQT",
+	"duzmOeCyBhulvzio9/aav8NhMpq+Xl9fy68fAye8uMaBnh/xtr0CuNKVDBDG/pyF54TNvpBlQfeFHDvz",
+	"DM3qjOaViOajmufR5vPaePZIZfj5PjAML7F7HbyZPrQtidsLnbuNZubnb83ZzqjKgv9vdu7TI5W43tic",
+	"bOa4vU3E2+4d2g0v4Qe5Hj1b3L3Rz4fU+8g19GY+c1ed9fcIa3SBf5dPXavSOef+BgAA///YiuUmFw0A",
+	"AA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

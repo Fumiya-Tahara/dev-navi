@@ -1,6 +1,15 @@
 version: "3.8"
 
 services:
+  api:
+    build: ./api
+    container_name: dev_navi_api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api:/app/api
+
+
   db:
     image: postgres:16.2-alpine3.19
     container_name: dev_navi_db

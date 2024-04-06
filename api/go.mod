@@ -1,6 +1,6 @@
 module github.com/Fumiya-Tahara/dev-navi
 
-go 1.22.1
+go 1.22.2
 
 require (
 	github.com/getkin/kin-openapi v0.123.0

@@ -22,15 +22,13 @@ jobs:
           cache: "false"
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: v1.54
-          working-directory: api
+        working-directory: api
+        run: make lint
 
       - name: Build
         working-directory: api
-        run: go build -v ./...
+        run: make build
 
       - name: Test
         working-directory: api
-        run: go test -v ./...
+        run: make test

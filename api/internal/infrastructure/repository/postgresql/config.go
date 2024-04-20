@@ -25,7 +25,7 @@ func NewConfig() *Config {
 		fmt.Println(err.Error())
 	}
 
-	host := viper.GetString("DB_HOST")
+	host := viper.GetString("POSTGRES_HOST")
 	userName := viper.GetString("POSTGRES_USER")
 	password := viper.GetString("POSTGRES_PASSWORD")
 	dbName := viper.GetString("POSTGRES_DB")

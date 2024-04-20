@@ -1,7 +1,7 @@
 package postgresql
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/spf13/viper"
 )
@@ -10,7 +10,7 @@ type Config struct {
 	Host     string
 	Username string
 	Password string
-	DbName   string
+	DBName   string
 	Port     string
 	SslMode  string
 	TimeZone string
@@ -20,9 +20,10 @@ func NewConfig() *Config {
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 	viper.AddConfigPath("./")
+
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	host := viper.GetString("POSTGRES_HOST")
@@ -37,7 +38,7 @@ func NewConfig() *Config {
 		Host:     host,
 		Username: userName,
 		Password: password,
-		DbName:   dbName,
+		DBName:   dbName,
 		Port:     port,
 		SslMode:  sslMode,
 		TimeZone: timeZone,

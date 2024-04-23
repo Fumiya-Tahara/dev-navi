@@ -19,3 +19,5 @@ linters:
     - golint
     - interfacer
     - scopelint
+    - depguard
+    - exhaustruct

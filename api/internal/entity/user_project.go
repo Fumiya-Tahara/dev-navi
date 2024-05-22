@@ -6,11 +6,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type Project struct {
-	ID        uint           `json:"id"`
-	Title     string         `json:"title"`
-	Deadline  time.Time      `json:"deadline"`
-	Memo      string         `json:"memo"`
+type UserProject struct {
+	UserID    uint           `json:"user_id"`
+	ProjectID uint           `json:"project_id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at"`

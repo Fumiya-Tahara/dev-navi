@@ -1,4 +1,4 @@
-package interfaces
+package usecase
 
 import "github.com/Fumiya-Tahara/dev-navi/internal/entity"
 

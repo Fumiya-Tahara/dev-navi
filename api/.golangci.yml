@@ -24,3 +24,4 @@ linters:
     - gci
     - testpackage
     - varnamelen
+    - ireturn

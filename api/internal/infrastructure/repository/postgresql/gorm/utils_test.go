@@ -1,6 +1,8 @@
 package gorm
 
 import (
+	"fmt"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"gorm.io/driver/postgres"
 
@@ -17,8 +19,8 @@ func SetUpDBMock() (*gorm.DB, sqlmock.Sqlmock, error) {
 		Conn: db,
 	}), &gorm.Config{})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to create sqlmock: %w", err)
 	}
 
-	return gdb, mock, nil
+	return gdb, mock, fmt.Errorf("failed to create sqlmock: %w", err)
 }

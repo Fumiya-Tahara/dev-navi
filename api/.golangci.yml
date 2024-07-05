@@ -25,3 +25,4 @@ linters:
     - testpackage
     - varnamelen
     - ireturn
+    - wrapcheck

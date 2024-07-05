@@ -21,3 +21,8 @@ linters:
     - scopelint
     - depguard
     - exhaustruct
+    - gci
+    - testpackage
+    - varnamelen
+    - ireturn
+    - wrapcheck

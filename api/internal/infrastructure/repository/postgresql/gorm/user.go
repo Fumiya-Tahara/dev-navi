@@ -9,8 +9,8 @@ type UserRepository struct {
 	DB *gorm.DB
 }
 
-func (ur UserRepository) Create(u *entity.User) (user *entity.User, err error) {
-	err = ur.DB.Create(u).Error
+func (ur UserRepository) Create(u *entity.User) (*entity.User, error) {
+	err := ur.DB.Create(u).Error
 	if err != nil {
 		return nil, err
 	}
@@ -18,14 +18,40 @@ func (ur UserRepository) Create(u *entity.User) (user *entity.User, err error) {
 	return u, nil
 }
 
-func (UserRepository) FindById(id uint) (*entity.User, error) {
-	return nil, nil
+func (ur UserRepository) FindByID(id uint) (*entity.User, error) {
+	user := &entity.User{}
+
+	err := ur.DB.First(user, id).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
-func (UserRepository) Update(user *entity.User) error {
-	return nil
+func (ur UserRepository) Update(u *entity.User) (*entity.User, error) {
+	user := &entity.User{}
+
+	err := ur.DB.First(user, u.ID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	user.Name = u.Name
+
+	err = ur.DB.Save(user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
-func (UserRepository) Delete(user *entity.User, id uint) error {
+func (ur UserRepository) Delete(id uint) error {
+	err := ur.DB.Delete(&entity.User{}, id).Error
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

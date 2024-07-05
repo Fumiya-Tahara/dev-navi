@@ -12,15 +12,15 @@ import (
 func SetUpDBMock() (*gorm.DB, sqlmock.Sqlmock, error) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to create sqlmock: %w", err)
 	}
 
 	gdb, err := gorm.Open(postgres.New(postgres.Config{
 		Conn: db,
 	}), &gorm.Config{})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create sqlmock: %w", err)
+		return nil, nil, fmt.Errorf("failed to create gorm db: %w", err)
 	}
 
-	return gdb, mock, fmt.Errorf("failed to create sqlmock: %w", err)
+	return gdb, mock, fmt.Errorf("failed to set up db mock: %w", err)
 }

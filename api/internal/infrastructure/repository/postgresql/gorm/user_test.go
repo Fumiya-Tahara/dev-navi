@@ -4,9 +4,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/Fumiya-Tahara/dev-navi/internal/entity"
 )

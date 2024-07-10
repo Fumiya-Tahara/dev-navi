@@ -29,8 +29,7 @@ func TestUserCreate(t *testing.T) {
 	// set mock
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	query := regexp.QuoteMeta(
-		"INSERT INTO \"users\" (\"name\",\"password\",\"created_at\",\"updated_at\",\"deleted_at\") " +
-			"VALUES ($1,$2,$3,$4,$5) RETURNING \"id\"")
+		"INSERT INTO \"users\" (\"name\",\"password\",\"created_at\",\"updated_at\") " + "VALUES ($1,$2,$3,$4) RETURNING \"id\"")
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(query).
@@ -52,8 +51,7 @@ func TestUserFindById(t *testing.T) {
 	// set mock
 	rows := sqlmock.NewRows([]string{"id", "name", "password"}).AddRow(1, testName, testPassword)
 	query := regexp.QuoteMeta(
-		"SELECT * FROM \"users\" WHERE \"users\".\"id\" = $1 " +
-			"AND \"users\".\"deleted_at\" IS NULL ORDER BY \"users\".\"id\" LIMIT $2")
+		"SELECT * FROM \"users\" WHERE \"users\".\"id\" = $1 ORDER BY \"users\".\"id\" LIMIT $2")
 
 	mock.ExpectQuery(query).
 		WillReturnRows(rows)
@@ -79,15 +77,13 @@ func TestUserUpdate(t *testing.T) {
 	// set mock
 	rows := sqlmock.NewRows([]string{"id", "name", "password"}).AddRow(1, testName, testPassword)
 	selectQuery := regexp.QuoteMeta(
-		"SELECT * FROM \"users\" WHERE \"users\".\"id\" = $1 " +
-			"AND \"users\".\"deleted_at\" IS NULL ORDER BY \"users\".\"id\" LIMIT $2")
+		"SELECT * FROM \"users\" WHERE \"users\".\"id\" = $1 ORDER BY \"users\".\"id\" LIMIT $2")
 
 	mock.ExpectQuery(selectQuery).
 		WillReturnRows(rows)
 
 	updateQuery := regexp.QuoteMeta(
-		"UPDATE \"users\" SET \"name\"=$1,\"password\"=$2,\"created_at\"=$3,\"updated_at\"=$4,\"deleted_at\"=$5 " +
-			"WHERE \"users\".\"deleted_at\" IS NULL AND \"id\" = $6")
+		"UPDATE \"users\" SET \"name\"=$1,\"password\"=$2,\"created_at\"=$3,\"updated_at\"=$4 WHERE \"id\" = $5")
 
 	mock.ExpectBegin()
 	mock.ExpectExec(updateQuery).
@@ -107,8 +103,7 @@ func TestUserDelete(t *testing.T) {
 	require.NoError(t, err, "Expected no error, got %v", err)
 
 	query := regexp.QuoteMeta(
-		"UPDATE \"users\" SET \"deleted_at\"=$1 WHERE \"users\".\"id\" = $2 " +
-			"AND \"users\".\"deleted_at\" IS NULL")
+		"DELETE FROM \"users\" WHERE \"users\".\"id\" = $1")
 
 	// set mock
 	mock.ExpectBegin()

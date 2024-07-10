@@ -29,7 +29,8 @@ func TestUserCreate(t *testing.T) {
 	// set mock
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	query := regexp.QuoteMeta(
-		"INSERT INTO \"users\" (\"name\",\"password\",\"created_at\",\"updated_at\") " + "VALUES ($1,$2,$3,$4) RETURNING \"id\"")
+		"INSERT INTO \"users\" (\"name\",\"password\",\"created_at\",\"updated_at\") " +
+			"VALUES ($1,$2,$3,$4) RETURNING \"id\"")
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(query).

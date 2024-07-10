@@ -5,13 +5,13 @@ import (
 )
 
 type Project struct {
-	ID         uint        `db:"id"`
-	Title      string      `db:"title"`
-	Deadline   time.Time   `db:"deadline"`
-	Status     uint        `db:"status"`
-	Memo       string      `db:"memo"`
-	CreatedAt  time.Time   `db:"created_at"`
-	UpdatedAt  time.Time   `db:"updated_at"`
-	Users      []User      `db:"many2many:user_projects"`
-	Milestones []Milestone `db:"foreignKey:ProjectID"`
+	ID         uint        `gorm:"id"`
+	Title      string      `gorm:"title"`
+	Deadline   time.Time   `gorm:"deadline"`
+	Status     uint        `gorm:"status"`
+	Memo       string      `gorm:"memo"`
+	CreatedAt  time.Time   `gorm:"created_at"`
+	UpdatedAt  time.Time   `gorm:"updated_at"`
+	Users      []User      `gorm:"many2many:user_projects"`
+	Milestones []Milestone `gorm:"foreignKey:ProjectID"`
 }

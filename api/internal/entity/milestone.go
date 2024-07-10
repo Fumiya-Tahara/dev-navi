@@ -5,11 +5,11 @@ import (
 )
 
 type Milestone struct {
-	ID        uint      `db:"id"`
-	Title     string    `db:"title"`
-	Deadline  time.Time `db:"deadline"`
-	Status    uint      `db:"status"`
-	ProjectID uint      `db:"project_id"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        uint      `gorm:"id"`
+	Title     string    `gorm:"title"`
+	Deadline  time.Time `gorm:"deadline"`
+	Status    uint      `gorm:"status"`
+	ProjectID uint      `gorm:"project_id"`
+	CreatedAt time.Time `gorm:"created_at"`
+	UpdatedAt time.Time `gorm:"updated_at"`
 }

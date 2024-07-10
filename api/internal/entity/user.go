@@ -1,16 +1,12 @@
 package entity
 
-import (
-	"time"
-
-	"gorm.io/gorm"
-)
+import "time"
 
 type User struct {
-	ID        uint           `json:"id"`
-	Name      string         `json:"name"`
-	Password  string         `json:"password"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at"`
+	ID        uint      `gorm:"id"`
+	Name      string    `gorm:"name"`
+	Password  string    `gorm:"password"`
+	CreatedAt time.Time `gorm:"created_at"`
+	UpdatedAt time.Time `gorm:"updated_at"`
+	Projects  []Project `gorm:"many2many:user_projects"`
 }
